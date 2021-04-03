@@ -75,6 +75,8 @@ struct msm_sensor_ctrl_t {
 	struct device_node *of_node;
 };
 
+void msm_sensor_misc_regulator(struct msm_sensor_ctrl_t *sctrl, uint32_t enable); //yuxin add 
+
 int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp);
 
 int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl);

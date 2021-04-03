@@ -255,6 +255,47 @@ static struct msm_gpiomux_config msm_lcd_configs[] __initdata = {
 	}
 };
 
+static struct gpiomux_setting ext_ovp_act_cfg = {
+       .func = GPIOMUX_FUNC_GPIO,
+       .drv = GPIOMUX_DRV_6MA,
+       .pull = GPIOMUX_PULL_DOWN,
+};
+
+static struct gpiomux_setting ext_ovp_sus_cfg = {
+       .func = GPIOMUX_FUNC_GPIO,
+       .drv = GPIOMUX_DRV_2MA,
+       .pull = GPIOMUX_PULL_DOWN,
+};
+
+static struct gpiomux_setting ext_ovp_flag_act_cfg = {
+       .func = GPIOMUX_FUNC_GPIO,
+       .drv = GPIOMUX_DRV_2MA,
+       .pull = GPIOMUX_PULL_NONE,
+};
+
+static struct gpiomux_setting ext_ovp_flag_sus_cfg = {
+       .func = GPIOMUX_FUNC_GPIO,
+       .drv = GPIOMUX_DRV_2MA,
+       .pull = GPIOMUX_PULL_NONE,
+};
+
+static struct msm_gpiomux_config msm_ext_ovp_configs[] __initdata = {
+	{
+		.gpio = 12,		/* ext ovp */
+		.settings = {
+			[GPIOMUX_ACTIVE]    = &ext_ovp_flag_act_cfg,
+			[GPIOMUX_SUSPENDED] = &ext_ovp_flag_sus_cfg,
+		},
+	},
+	{
+		.gpio = 13,		/* ext ovp */
+		.settings = {
+			[GPIOMUX_ACTIVE]    = &ext_ovp_act_cfg,
+			[GPIOMUX_SUSPENDED] = &ext_ovp_sus_cfg,
+		},
+	}
+};
+
 static struct msm_gpiomux_config msm_blsp_configs[] __initdata = {
 	{
 		.gpio      = 0,		/* BLSP1 QUP1 SPI_DATA_MOSI */
@@ -284,6 +325,7 @@ static struct msm_gpiomux_config msm_blsp_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gpio_i2c_config,
 		},
 	},
+	#if 0 
 	{
 		.gpio      = 15,	/* BLSP1 QUP4 I2C_SCL */
 		.settings = {
@@ -291,6 +333,7 @@ static struct msm_gpiomux_config msm_blsp_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gpio_i2c_config,
 		},
 	},
+	#endif
 	{
 		.gpio      = 18,		/* BLSP1 QUP5 I2C_SDA */
 		.settings = {
@@ -547,7 +590,7 @@ static struct gpiomux_setting sd_card_det_active_config = {
 static struct gpiomux_setting sd_card_det_sleep_config = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_2MA,
-	.pull = GPIOMUX_PULL_UP,
+	.pull = GPIOMUX_PULL_NONE,
 	.dir = GPIOMUX_IN,
 };
 
@@ -679,6 +722,16 @@ static struct gpiomux_setting cam_settings[] = {
 		.drv = GPIOMUX_DRV_2MA,
 		.pull = GPIOMUX_PULL_DOWN,
 	},
+	
+	#if defined (CONFIG_SP0A28) || defined (CONFIG_SP0A20)
+	{
+		.func = GPIOMUX_FUNC_GPIO, /*suspend 1*/ /* 5 */
+		.drv = GPIOMUX_DRV_2MA,
+		.pull = GPIOMUX_PULL_DOWN,
+		.dir = GPIOMUX_OUT_HIGH,
+	},
+	#endif
+	
 };
 
 
@@ -730,7 +783,13 @@ static struct msm_gpiomux_config msm_sensor_configs[] __initdata = {
 		.gpio = 35, /* CAM2_STANDBY_N */
 		.settings = {
 			[GPIOMUX_ACTIVE]    = &cam_settings[3],
+
+			#if defined ( CONFIG_SP0A28) || defined (CONFIG_SP0A20)
+			[GPIOMUX_SUSPENDED] = &cam_settings[5],
+			#else
 			[GPIOMUX_SUSPENDED] = &cam_settings[4],
+			#endif
+
 		},
 	},
 	{
@@ -948,6 +1007,8 @@ void __init msm8226_init_gpiomux(void)
 
 	msm_gpiomux_install_nowrite(msm_lcd_configs,
 			ARRAY_SIZE(msm_lcd_configs));
+       msm_gpiomux_install(msm_ext_ovp_configs,
+                                       ARRAY_SIZE(msm_ext_ovp_configs));
 
 	msm_gpiomux_install(msm_sensor_configs, ARRAY_SIZE(msm_sensor_configs));
 

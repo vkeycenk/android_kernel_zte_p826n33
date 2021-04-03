@@ -25,6 +25,9 @@
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
 #include <linux/pm_runtime.h>
+
+#include <linux/suspend.h>
+
 #include <linux/of.h>
 #include <linux/dma-mapping.h>
 
@@ -89,7 +92,9 @@ module_param(lpm_disconnect_thresh , uint, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(lpm_disconnect_thresh,
 	"Delay before entering LPM on USB disconnect");
 
-static bool floated_charger_enable;
+//[0000]maxiaoping 20131204 for floated charger charging enable,start.
+static bool floated_charger_enable = 1;
+//[0000]maxiaoping 20131204 for floated charger charging enable,end.
 module_param(floated_charger_enable , bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(floated_charger_enable,
 	"Whether to enable floated charger");
@@ -1360,8 +1365,13 @@ static int msm_otg_notify_power_supply(struct msm_otg *motg, unsigned mA)
 			goto psy_error;
 	} else if (motg->cur_power > 0 && (mA == 0 || mA == 2)) {
 		/* Disable charging */
-		if (power_supply_set_online(psy, false))
+		//[0000]maxiaoping 20140208 for usb otg,start.
+		if(mA == 0)
+		{
+			if (power_supply_set_online(psy, false))
 			goto psy_error;
+		}
+		//[0000]maxiaoping 20140208 for usb otg,end.
 		/* Set max current limit */
 		if (power_supply_set_current_limit(psy, 0))
 			goto psy_error;
@@ -1405,6 +1415,11 @@ static void msm_otg_notify_charger(struct msm_otg *motg, unsigned mA)
 			mA > IDEV_ACA_CHG_LIMIT)
 		mA = IDEV_ACA_CHG_LIMIT;
 
+	else if((motg->chg_type == USB_FLOATED_CHARGER) && (mA > 500)) {
+		mA = 500;
+		dev_info(motg->phy.dev, "charger type %d Avail curr changed to %u\n", motg->chg_type, mA);
+	}	
+
 	if (msm_otg_notify_chg_type(motg))
 		dev_err(motg->phy.dev,
 			"Failed notifying %d charger type to PMIC\n",
@@ -1420,7 +1435,7 @@ static void msm_otg_notify_charger(struct msm_otg *motg, unsigned mA)
 	if (motg->cur_power == mA)
 		return;
 
-	dev_info(motg->phy.dev, "Avail curr from USB = %u\n", mA);
+	dev_info(motg->phy.dev, "charger type %d Avail curr from USB = %u\n", motg->chg_type, mA);
 
 	/*
 	 *  Use Power Supply API if supported, otherwise fallback
@@ -3389,10 +3404,13 @@ static void msm_otg_set_vbus_state(int online)
 		return;
 	}
 
-	if (atomic_read(&motg->pm_suspended))
+	if (atomic_read(&motg->pm_suspended)){
 		motg->sm_work_pending = true;
-	else
+	}else if(!motg->sm_work_pending){
+		/*process event only if previous one is not pending*/
 		queue_work(system_nrt_wq, &motg->sm_work);
+		}
+
 }
 
 static void msm_pmic_id_status_w(struct work_struct *w)
@@ -3400,6 +3418,8 @@ static void msm_pmic_id_status_w(struct work_struct *w)
 	struct msm_otg *motg = container_of(w, struct msm_otg,
 						pmic_id_status_work.work);
 	int work = 0;
+
+       dev_dbg(motg->phy.dev, "ID status_w\n");
 
 	if (msm_otg_read_pmic_id_state(motg)) {
 		if (!test_and_set_bit(ID, &motg->inputs)) {
@@ -3415,10 +3435,12 @@ static void msm_pmic_id_status_w(struct work_struct *w)
 	}
 
 	if (work && (motg->phy.state != OTG_STATE_UNDEFINED)) {
-		if (atomic_read(&motg->pm_suspended))
+		if (atomic_read(&motg->pm_suspended)){
 			motg->sm_work_pending = true;
-		else
+		}else if (!motg->sm_work_pending) {
+		       /* process event only if previous one is not pending */
 			queue_work(system_nrt_wq, &motg->sm_work);
+		}
 	}
 
 }
@@ -3440,6 +3462,32 @@ static irqreturn_t msm_pmic_id_irq(int irq, void *data)
 				msecs_to_jiffies(MSM_PMIC_ID_STATUS_DELAY));
 
 	return IRQ_HANDLED;
+}
+
+int msm_otg_pm_notify(struct notifier_block *notify_block,
+			unsigned long mode, void *unused)
+{	
+    struct msm_otg *motg = container_of(
+	notify_block, struct msm_otg, pm_notify);
+	
+    dev_dbg(motg->phy.dev, "OTG PM notify:%lx, sm_pending:%u\n", mode,
+		     motg->sm_work_pending);
+
+    switch (mode) {
+	case PM_POST_SUSPEND:
+	    /* OTG sm_work can be armed now */
+	    atomic_set(&motg->pm_suspended, 0);
+		/* Handle any deferred wakeup events from USB during suspend */
+		if (motg->sm_work_pending) {
+			motg->sm_work_pending = false;
+			queue_work(system_nrt_wq, &motg->sm_work);
+		}
+		break;
+		
+	default:
+		break;
+	}
+	return NOTIFY_OK;
 }
 
 static int msm_otg_mode_show(struct seq_file *s, void *unused)
@@ -4718,6 +4766,9 @@ static int __init msm_otg_probe(struct platform_device *pdev)
 	if (ret)
 		dev_dbg(&pdev->dev, "fail to setup cdev\n");
 
+	motg->pm_notify.notifier_call = msm_otg_pm_notify;
+	register_pm_notifier(&motg->pm_notify);
+
 	return 0;
 
 remove_phy:
@@ -4779,6 +4830,8 @@ static int __devexit msm_otg_remove(struct platform_device *pdev)
 
 	if (phy->otg->host || phy->otg->gadget)
 		return -EBUSY;
+
+       unregister_pm_notifier(&motg->pm_notify);
 
 	if (!motg->ext_chg_device) {
 		device_destroy(motg->ext_chg_class, motg->ext_chg_dev);
@@ -4948,7 +5001,10 @@ static int msm_otg_pm_resume(struct device *dev)
 	dev_dbg(dev, "OTG PM resume\n");
 
 	motg->pm_done = 0;
-	atomic_set(&motg->pm_suspended, 0);
+
+	if (!motg->host_bus_suspend)
+		atomic_set(&motg->pm_suspended, 0);
+
 	if (motg->async_int || motg->sm_work_pending) {
 		pm_runtime_get_noresume(dev);
 		ret = msm_otg_resume(motg);
@@ -4958,7 +5014,12 @@ static int msm_otg_pm_resume(struct device *dev)
 		pm_runtime_set_active(dev);
 		pm_runtime_enable(dev);
 
-		if (motg->sm_work_pending) {
+		/*
+		* Defer any host mode disconnect events until
+		* all devices are RESUMED
+		*
+		*/
+		if (motg->sm_work_pending && !motg->host_bus_suspend) {
 			motg->sm_work_pending = false;
 			queue_work(system_nrt_wq, &motg->sm_work);
 		}

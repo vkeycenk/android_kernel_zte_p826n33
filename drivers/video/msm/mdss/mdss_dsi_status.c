@@ -57,6 +57,7 @@ static void check_dsi_ctrl_status(struct work_struct *work)
 	struct mdss_overlay_private *mdp5_data = NULL;
 	struct mdss_mdp_ctl *ctl = NULL;
 	int ret = 0;
+	int ret2 = 0; // lijiangshuo add for LCD ESD test 20140522
 
 	pdsi_status = container_of(to_delayed_work(work),
 		struct dsi_status_data, check_status);
@@ -118,8 +119,12 @@ static void check_dsi_ctrl_status(struct work_struct *work)
 	if (ctl->shared_lock)
 		mutex_unlock(ctl->shared_lock);
 
+	if((ret > 0) && (ctrl_pdata->check_lcd_status))
+		ret2 = ctrl_pdata->check_lcd_status(ctrl_pdata); // lijiangshuo add for LCD ESD test 20140522
+
 	if ((pdsi_status->mfd->panel_power_on)) {
-		if (ret > 0) {
+//		if (ret > 0) {
+		if ((ret > 0) && (ret2 == 0)){// lijiangshuo modifiy for LCD ESD test 20140522
 			schedule_delayed_work(&pdsi_status->check_status,
 				msecs_to_jiffies(pdsi_status->check_interval));
 		} else {

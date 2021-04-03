@@ -81,6 +81,10 @@
 
 static int kernel_init(void *);
 
+// add by qibo for poweroff charger begin
+int boot_is_poweroff_charger(void);
+// add by qibo end
+
 extern void init_IRQ(void);
 extern void fork_init(unsigned long);
 extern void mca_init(void);
@@ -892,3 +896,11 @@ static int __init kernel_init(void * unused)
 	init_post();
 	return 0;
 }
+
+// add by qibo for poweroff charger begin
+int boot_is_poweroff_charger()
+{
+    return (!!strstr(saved_command_line, "charger"));
+}
+// add by qibo end
+

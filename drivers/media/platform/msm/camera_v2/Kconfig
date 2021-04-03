@@ -226,6 +226,30 @@ config OV12830
 		4 mipi lanes, preview config = 2112 * 1500 at 30 fps,
 		snapshot config = 4224 * 3000 at 15 fps.
 		2 lanes max fps is 18, 4 lanes max fps is 24.
+	
+#ZTEBSP yuxin add for P826N33 front cam,2014.04.09  ++
+config SP0A28
+	bool "Sensor SP0A28 (YUV 480P)"
+	depends on MSMB_CAMERA
+	default n
+	---help---
+		SP0A28 is SuperPix YUV sensor. It supports 480P preview
+		and snapshot. The preview and snapshot resolution shall be
+		640 * 480. It does not support auto focus. It supports
+		few special effects like mono.
+#ZTEBSP yuxin add for P826N33 front cam,2014.04.09  --
+
+#ZTEBSP yuxin add for P826N33 front cam,2014.05.09  ++
+config SP0A20
+	bool "Sensor SP0A20 (YUV 480P)"
+	depends on MSMB_CAMERA
+	default n
+	---help---
+		SP0A20 is SuperPix YUV sensor. It supports 480P preview
+		and snapshot. The preview and snapshot resolution shall be
+		640 * 480. It does not support auto focus. It supports
+		few special effects like mono.
+#ZTEBSP yuxin add for P826N33 front cam,2014.05.09  --
 
 config MSM_V4L2_VIDEO_OVERLAY_DEVICE
 	tristate "Qualcomm MSM V4l2 video overlay device"

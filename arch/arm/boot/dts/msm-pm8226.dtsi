@@ -47,12 +47,19 @@
 				linux,code = <116>;
 			};
 
+// modify by ZTEBSP maxiaoping for power key 20131204 start
+/*
 			qcom,pon_2 {
 				qcom,pon-type = <1>;
 				qcom,pull-up = <1>;
 				linux,code = <114>;
+				qcom,s1-timer = <6720>;
+				qcom,s2-timer = <2000>;
+				qcom,s2-type = <7>;
+				qcom,support-reset = <1>;
 			};
-
+*/
+//modify by ZTEBSP maxiaoping for power key 20131204 end
 			qcom,pon_3 {
 				qcom,pon-type = <3>;
 				qcom,support-reset = <1>;
@@ -71,26 +78,32 @@
 			#size-cells = <1>;
 			status = "disabled";
 
-			qcom,vddmax-mv = <4200>;
-			qcom,vddsafe-mv = <4230>;
-			qcom,vinmin-mv = <4300>;
+			qcom,vddmax-mv = <4350>;/*ZTE_MODIFY zhangbo change*/
+			qcom,vddsafe-mv = <4380>;/*ZTE_MODIFY zhangbo change*/
+			qcom,vinmin-mv = <4350>;/*ZTE_MODIFY zhangbo change*/
 			qcom,vbatdet-delta-mv = <100>;
-			qcom,ibatmax-ma = <1500>;
-			qcom,ibatterm-ma = <100>;
-			qcom,ibatsafe-ma = <1500>;
+			qcom,ibatmax-ma = <1200>;/*ZTE_MODIFY zhangbo change*/
+			qcom,ibatterm-ma = <100>;/*ZTE_MODIFY zhangbo change*//*Normal it is 0.1C~0.15C*/
+			qcom,ibatsafe-ma = <1200>;/*ZTE_MODIFY zhangbo change*/
 			qcom,thermal-mitigation = <1500 700 600 325>;
 			qcom,resume-soc = <99>;
 			qcom,tchg-mins = <150>;
 			qcom,chg-vadc = <&pm8226_vadc>;
 			qcom,chg-adc_tm = <&pm8226_adc_tm>;
 			qcom,pmic-revid = <&pm8226_revid>;
-			qcom,ibatmax-warm-ma = <350>;
-			qcom,warm-bat-decidegc = <450>;
-			qcom,warm-bat-mv = <4100>;
-			qcom,cool-bat-decidegc = <100>;
-			qcom,cool-bat-mv = <4100>;
-			qcom,ibatmax-cool-ma = <350>;
+			qcom,maxinput-usb-ma = <1500>;/*ZTE_MODIFY 1A*/
+			qcom,ibatmax-warm-ma = <500>;
+			qcom,warm-bat-decidegc = <430>;
+			qcom,warm-bat-mv = <4350>;
+			qcom,cool-bat-decidegc = <20>;
+			qcom,cool-bat-mv = <4350>;
+			qcom,ibatmax-cool-ma = <500>;
 
+			qcom,batt-hot-percentage = <35>; /*ZTE_MODIFY zhangbo add*/
+			qcom,batt-cold-percentage= <70>; /*ZTE_MODIFY zhangbo add*/
+			qcom,ext-ovp-present; /*ZTE_MODIFY, add for external ovp*/
+			qcom,ext-ovp-gpio = <13>; /*ZTE_MODIFY, add for external ovp*/
+			
 			qcom,chgr@1000 {
 				status = "disabled";
 				reg = <0x1000 0x100>;
@@ -179,6 +192,7 @@
 				reg = <0x1600 0x100>;
 			};
 		};
+		/*maxiaoping 20131231 charge add end*/
 
 		pm8226_bms: qcom,bms {
 			spmi-dev-container;
@@ -189,9 +203,9 @@
 
 			qcom,r-sense-uohm = <10000>;
 			qcom,v-cutoff-uv = <3400000>;
-			qcom,max-voltage-uv = <4200000>;
+			qcom,max-voltage-uv = <4350000>; //ZTE_MODIFY zhangbo change
 			qcom,r-conn-mohm = <0>;
-			qcom,shutdown-soc-valid-limit = <100>;
+			qcom,shutdown-soc-valid-limit = <30>;  //ZTE_MODIFY zhangbo change
 			qcom,adjust-soc-low-threshold = <15>;
 			qcom,ocv-voltage-high-threshold-uv = <3750000>;
 			qcom,ocv-voltage-low-threshold-uv = <3650000>;
@@ -201,7 +215,7 @@
 			qcom,calculate-soc-ms = <20000>;
 			qcom,chg-term-ua = <100000>;
 			qcom,batt-type = <0>;
-			qcom,tm-temp-margin = <5000>;
+			qcom,tm-temp-margin = <10000>; /*ZTE_MODIFY, zhangbo change*/
 			qcom,low-ocv-correction-limit-uv = <100>;
 			qcom,high-ocv-correction-limit-uv = <250>;
 			qcom,hold-soc-est = <3>;
@@ -240,23 +254,28 @@
 			};
 		};
 
+		//maxiaoping 20131204 leds_test start.
+		//mpp2->Kpd led
 		qcom,leds@a100 {
 			compatible = "qcom,leds-qpnp";
 			reg = <0xa100 0x100>;
 			label = "mpp";
 		};
 
+		//mpp4->Green
 		qcom,leds@a300 {
 			compatible = "qcom,leds-qpnp";
 			reg = <0xa300 0x100>;
 			label = "mpp";
 		};
 
+		//mpp6->Red
 		qcom,leds@a500 {
 			compatible = "qcom,leds-qpnp";
 			reg = <0xa500 0x100>;
 			label = "mpp";
 		};
+		//maxiaoping 20131204 leds_test end.
 
 		pm8226_gpios: gpios {
 			spmi-dev-container;
@@ -484,8 +503,8 @@
 			compatible = "qcom,qpnp-rtc";
 			#address-cells = <1>;
 			#size-cells = <1>;
-			qcom,qpnp-rtc-write = <0>;
-			qcom,qpnp-rtc-alarm-pwrup = <0>;
+			qcom,qpnp-rtc-write = <0>;/*maxiaoping 20131204 for rtc alarm,now QCT doesn't support set rtc*/
+			qcom,qpnp-rtc-alarm-pwrup = <1>;/*maxiaoping 20131204 for rtc alarm*/
 
 			qcom,pm8226_rtc_rw@6000 {
 				reg = <0x6000 0x100>;
@@ -865,6 +884,22 @@
 						"flash0_trigger";
 				qcom,id = <1>;
 				linux,name = "led:flash_0";
+				qcom,current = <625>;
+			};
+
+			pm8226_flash1: qcom,flash_1 {
+				qcom,max-current = <1000>;
+				qcom,default-state = "off";
+				qcom,headroom = <3>;
+				qcom,duration = <1280>;
+				qcom,clamp-curr = <200>;
+				qcom,startup-dly = <3>;
+				qcom,safety-timer;
+				linux,default-trigger =
+						"flash1_trigger";
+				label = "flash";
+				qcom,id = <2>;
+				linux,name = "led:flash_1";
 				qcom,current = <625>;
 			};
 

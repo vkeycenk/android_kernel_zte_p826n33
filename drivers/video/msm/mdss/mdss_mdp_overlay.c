@@ -2655,12 +2655,20 @@ static int mdss_mdp_overlay_off(struct msm_fb_data_type *mfd)
 	struct mdss_overlay_private *mdp5_data;
 	struct mdss_mdp_mixer *mixer;
 	int need_cleanup;
+	struct mdss_panel_data *pdata = dev_get_platdata(&mfd->pdev->dev); // lijiangshuo modifiy for pv power on flick white 20140508
 
 	if (!mfd)
 		return -ENODEV;
 
 	if (mfd->key != MFD_KEY)
 		return -EINVAL;
+	/* lijiangshuo modifiy for pv power on flick white start 20140508 */
+	if ((pdata) && (pdata->set_backlight)) {
+		mutex_lock(&mfd->bl_lock);
+		pdata->set_backlight(pdata, 0);
+		mutex_unlock(&mfd->bl_lock);
+	}
+	/* lijiangshuo modifiy for pv power on flick white end 20140508 */
 
 	mdp5_data = mfd_to_mdp5_data(mfd);
 

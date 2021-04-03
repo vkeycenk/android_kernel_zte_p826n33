@@ -23,8 +23,169 @@
 };
 
 &cci {
+    //ZTE yuxin add for imx135 otp code,2014.06.20 ++
+	msm_eeprom0: qcom,eeprom@50 {
+		cell-index = <0>;
+		reg = <0x50>;
+		compatible = "qcom,eeprom0";
+		qcom,cci-master = <0>;
+		qcom,slave-addr = <0x50>;
+		qcom,eeprom-name = "imx135_eeprom";
+	};
+   //ZTE yuxin add for imx135 otp code,2014.06.20 --
+	
+/*ZTEBSP yuxin add for P826N33 PRJ main cam imx135,2014.04.03 ++*/
+   actuator0: qcom,actuator@18 {
+		cell-index = <5>;//use BU64291GWZ,file index is 5
+		reg = <0x18>;
+		compatible = "qcom,actuator";
+		qcom,cci-master = <0>;
+	};
+	
+	
+	/*ZTEBSP yuxin add for P826n33 use flash LM3642,2014.04.18 ++*/
+	led_flash1: qcom,lm3642@63 {
+		cell-index = <0>;
+		reg = <0x63 0x0>;
+		compatible = "qcom,lm3642";
+		qcom,cci-master = <0>;
+	};
+	/*ZTEBSP yuxin add for P826n33 use flash LM3642,2014.04.18 --*/
+	
+	qcom,camera@20 {		
+	  compatible = "qcom,imx135";		
+	  reg = <0x20>;		
+	  qcom,slave-id = <0x20 0x0016 0x0135>;		
+	  qcom,csiphy-sd-index = <0>;		
+	  qcom,csid-sd-index = <0>;		
+	  qcom,mount-angle = <90>;		
+	  qcom,sensor-name = "imx135";		
+	  qcom,actuator-src = <&actuator0>;		
+	  qcom,led-flash-src = <&led_flash1>;	
+	  qcom,eeprom-src = <&msm_eeprom0>;  
+	  cam_vdig-supply = <&pm8226_l5>;		
+	  cam_vio-supply = <&pm8226_lvs1>;		
+	  qcom,cam-vreg-name = "cam_vdig", "cam_vio";		
+	  qcom,cam-vreg-type = <0 1 >;	//0 for LDO and 1 for LVS	
+	  qcom,cam-vreg-min-voltage = <1100000 0 >;		/*ZTEBSP yuxin modify for P826N33 back cam set L5 output as 1.1V 2014.05.07 ++*/
+	  qcom,cam-vreg-max-voltage = <1100000 0 >;		/*ZTEBSP yuxin modify for P826N33 back cam set L5 output as 1.1V 2014.05.07 --*/
+	  qcom,cam-vreg-op-mode = <105000 0 >;		
+	  qcom,gpio-no-mux = <0>;		
+	  gpios =  <&msmgpio 26 0>,			
+	              <&msmgpio 37 0>,			
+	              <&msmgpio 36 0>,
+	              <&msmgpio 69 0>,
+	              <&msmgpio 15 0>;		
+	  qcom,gpio-reset = <1>;		
+	  qcom,gpio-standby = <2>;
+	  qcom,gpio-vana = <3>;
+	  qcom,gpio-vaf = <4>;
+	  qcom,gpio-req-tbl-num = <0 1 2 3 4>;		
+	  qcom,gpio-req-tbl-flags = <1 0 0 0 0>;		
+	  qcom,gpio-req-tbl-label = "CAMIF_MCLK",					  
+	  "CAM_RESET1",					  
+	  "CAM_STANDBY",
+	  "CAM_VANA",
+	  "CAM_VAF";		
+	  qcom,gpio-set-tbl-num = <1 1>;		
+	  qcom,gpio-set-tbl-flags = <0 2>;		
+	  qcom,gpio-set-tbl-delay = <1000 30000>;		
+	  qcom,csi-lane-assign = <0x4320>;		
+	  qcom,csi-lane-mask = <0x1F>;		
+	  qcom,sensor-position = <0>;		
+	  qcom,sensor-mode = <0>;	        
+	  qcom,sensor-type = <0>;		
+	  qcom,cci-master = <0>;		
+	  status = "ok";	
+	};
 
-	actuator0: qcom,actuator@6e {
+/*ZTEBSP yuxin add for P826N33 PRJ main cam imx135,2014.04.03 --*/
+
+/*ZTEBSP yuxin add for P826N33 PRJ front cam sp0a28,2014.04.09 ++*/
+qcom,camera@7a {
+		compatible = "qcom,sp0a28";
+		reg = <0x7A>;
+		qcom,slave-id = <0x7A 0x02 0xa2>;
+		qcom,csiphy-sd-index = <1>;
+		qcom,csid-sd-index = <1>;
+		qcom,mount-angle = <270>;//90 // yuxin modify for CTS test 2014.05.20
+		qcom,sensor-name = "sp0a28";
+		//cam_vdig-supply = <&pm8226_l5>;
+		cam_vio-supply = <&pm8226_lvs1>;
+    cam_vdig-supply = <&pm8226_lvs1>;
+		qcom,cam-vreg-name = "cam_vio","cam_vdig";
+		qcom,cam-vreg-type = <0 0>;
+		qcom,cam-vreg-min-voltage = <0 0>;
+		qcom,cam-vreg-max-voltage = <0 0>;
+		qcom,cam-vreg-op-mode = <0 0>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+		        <&msmgpio 28 0>,
+			      <&msmgpio 35 0>,
+			      <&msmgpio 69 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-standby = <2>;
+		qcom,gpio-vana = <3>;
+		qcom,gpio-req-tbl-num = <0 1 2 3>;                                   
+		qcom,gpio-req-tbl-flags = <1 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK",                            
+				          "CAM_RESET",
+			            "CAM_STANDBY",
+			            "CAM_VANA";
+		qcom,csi-lane-assign = <0x4320>;
+		qcom,csi-lane-mask = <0x3>;
+		qcom,sensor-position = <1>; //front
+		qcom,sensor-mode = <1>;//front 2D
+		qcom,sensor-type = <1>;//yuv
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+/*ZTEBSP yuxin add for P826N33 PRJ front cam sp0a28,2014.04.09 --*/
+
+/*ZTEBSP yuxin add for P826N33 PRJ front cam sp0a20,2014.05.09 ++*/
+qcom,camera@42 {
+		compatible = "qcom,sp0a20";
+		reg = <0x42>;
+		qcom,slave-id = <0x42 0x02 0x2b>;
+		qcom,csiphy-sd-index = <1>;
+		qcom,csid-sd-index = <1>;
+		qcom,mount-angle = <270>;//90 // yuxin modify for CTS test 2014.05.20
+		qcom,sensor-name = "sp0a20";
+		//cam_vdig-supply = <&pm8226_l5>;
+		cam_vio-supply = <&pm8226_lvs1>;
+    cam_vdig-supply = <&pm8226_lvs1>;
+		qcom,cam-vreg-name = "cam_vio","cam_vdig";
+		qcom,cam-vreg-type = <0 0>;
+		qcom,cam-vreg-min-voltage = <0 0>;
+		qcom,cam-vreg-max-voltage = <0 0>;
+		qcom,cam-vreg-op-mode = <0 0>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+		        <&msmgpio 28 0>,
+			      <&msmgpio 35 0>,
+			      <&msmgpio 69 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-standby = <2>;
+		qcom,gpio-vana = <3>;
+		qcom,gpio-req-tbl-num = <0 1 2 3>;                                   
+		qcom,gpio-req-tbl-flags = <1 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK",                            
+				          "CAM_RESET",
+			            "CAM_STANDBY",
+			            "CAM_VANA";
+		qcom,csi-lane-assign = <0x4320>;
+		qcom,csi-lane-mask = <0x3>;
+		qcom,sensor-position = <1>; //front
+		qcom,sensor-mode = <1>;//front 2D
+		qcom,sensor-type = <1>;//yuv
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+/*ZTEBSP yuxin add for P826N33 PRJ front cam sp0a28,2014.04.09 --*/
+
+/*ZTEBSP yuxin del qualcomm org code for imx135 init,2014.04.08 ++*/
+/*
+   actuator0: qcom,actuator@6e {
 		cell-index = <3>;
 		reg = <0x6c>;
 		compatible = "qcom,actuator";
@@ -442,6 +603,8 @@
 		qcom,cci-master = <0>;
 		status = "ok";
 	};
+*/
+/*ZTEBSP yuxin del qualcomm org code for imx135 init,2014.04.08 --*/
 	qcom,camera@0 {
 		cell-index = <0>;
 		compatible = "qcom,camera";
@@ -450,7 +613,7 @@
 		qcom,csid-sd-index = <0>;
 		qcom,mount-angle = <90>;
 		qcom,actuator-src = <&actuator0>;
-		qcom,eeprom-src = <&eeprom0>;
+		//qcom,eeprom-src = <&eeprom0>;  //yuxin del for compile 2014.04.08
 		qcom,led-flash-src = <&led_flash0>;
 		cam_vdig-supply = <&pm8226_l5>;
 		cam_vana-supply = <&pm8226_l19>;
@@ -491,7 +654,7 @@
 		reg = <0x1>;
 		qcom,csiphy-sd-index = <1>;
 		qcom,csid-sd-index = <1>;
-		qcom,eeprom-src = <&eeprom2>;
+		//qcom,eeprom-src = <&eeprom2>;  //yuxin del for compile 2014.04.08
 		qcom,mount-angle = <270>;
 		cam_vdig-supply = <&pm8226_l5>;
 		cam_vana-supply = <&pm8226_l19>;

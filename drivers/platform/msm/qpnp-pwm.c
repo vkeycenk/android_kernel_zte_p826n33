@@ -26,7 +26,9 @@
 #include <linux/of_device.h>
 #include <linux/radix-tree.h>
 #include <linux/qpnp/pwm.h>
-
+//add by wangyongwu for led not work 2014.1.7 start
+#include <linux/delay.h>
+//add by wangyongwu for led not work 2014.1.7 end
 #define QPNP_LPG_DRIVER_NAME	"qcom,qpnp-pwm"
 #define QPNP_LPG_CHANNEL_BASE	"qpnp-lpg-channel-base"
 #define QPNP_LPG_LUT_BASE	"qpnp-lpg-lut-base"
@@ -1037,7 +1039,9 @@ static int qpnp_lpg_configure_lut_state(struct pwm_device *pwm,
 					addr, 1, chip);
 	if (rc)
 		return rc;
-
+	//add by wangyongwu for led not work 2014.1.7 start
+	mdelay(5);
+	//add by wangyongwu for led not work 2014.1.7 end
 	return qpnp_lpg_save_and_write(value1, mask1, reg1,
 					addr1, 1, chip);
 }

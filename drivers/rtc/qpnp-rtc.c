@@ -596,6 +596,8 @@ static int __devinit qpnp_rtc_probe(struct spmi_device *spmi)
 	device_init_wakeup(&spmi->dev, 1);
 	enable_irq_wake(rtc_dd->rtc_alarm_irq);
 
+	qpnp_rtc_alarm_irq_enable(&spmi->dev, 0);
+
 	dev_dbg(&spmi->dev, "Probe success !!\n");
 
 	return 0;

@@ -720,8 +720,13 @@ static void __subsystem_restart_dev(struct subsys_device *dev)
 	struct subsys_tracking *track;
 	unsigned long flags;
 
+#ifdef USEING_QUALCOMM_RESTART_LEVEL
 	pr_debug("Restarting %s [level=%s]!\n", desc->name,
 			restart_levels[dev->restart_level]);
+#else
+	pr_debug("Restarting %s [level=%s]!\n", desc->name,
+			restart_levels[RESET_SUBSYS_COUPLED]);
+#endif
 
 	track = subsys_get_track(dev);
 	/*
@@ -741,6 +746,8 @@ static void __subsystem_restart_dev(struct subsys_device *dev)
 	}
 	spin_unlock_irqrestore(&track->s_lock, flags);
 }
+
+extern int zte_dump_switch;
 
 int subsystem_restart_dev(struct subsys_device *dev)
 {
@@ -767,6 +774,7 @@ int subsystem_restart_dev(struct subsys_device *dev)
 		return -EBUSY;
 	}
 
+#ifdef USEING_QUALCOMM_RESTART_LEVEL
 	pr_info("Restart sequence requested for %s, restart_level = %s.\n",
 		name, restart_levels[dev->restart_level]);
 
@@ -782,6 +790,24 @@ int subsystem_restart_dev(struct subsys_device *dev)
 		panic("subsys-restart: Unknown restart level!\n");
 		break;
 	}
+#else
+        if (zte_dump_switch)
+            {
+              //RESET_SOC
+              	pr_info("Restart sequence requested for %s, restart_level = %s.\n",
+		name, restart_levels[RESET_SOC]);
+		
+		panic("subsys-restart: Resetting the SoC - %s crashed.", name);
+            }
+	else
+	    {
+	        //RESET_SUBSYS_COUPLED
+	       	pr_info("Restart sequence requested for %s, restart_level = %s.\n",
+		name, restart_levels[RESET_SUBSYS_COUPLED]);
+	    	__subsystem_restart_dev(dev);
+	    }
+#endif
+
 	module_put(dev->owner);
 	put_device(&dev->dev);
 

@@ -52,6 +52,13 @@
 #include <mach/msm_memtypes.h>
 
 #include "mdss_fb.h"
+#include "mdss_panel.h" // lijiangshuo add 20140416
+
+/* lijiangshuo add for LCD factory mode 20140430 start */
+static struct proc_dir_entry * d_entry;
+static char  module_name[50]={"0"};
+extern char LcdPanelName[50];
+/* lijiangshuo add for LCD factory mode 20140430 end */
 
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
 #define MDSS_FB_NUM 3
@@ -417,6 +424,36 @@ static void mdss_fb_shutdown(struct platform_device *pdev)
 	unlock_fb_info(mfd->fbi);
 }
 
+/* lijiangshuo add for LCD factory mode 20140430 start */
+static int init_lcd_proc_done = 0; // lijiangshuo add for LCD factory mode 20140505
+static int msm_lcd_read_proc(
+        char *page, char **start, off_t off, int count, int *eof, void *data)
+{
+	int len = 0;
+	
+	if (!strncmp(LcdPanelName, YUSHUN_NT35521_720_1280_5P0_P826N33_NAME, strnlen(YUSHUN_NT35521_720_1280_5P0_P826N33_NAME, PANEL_NAME_MAX_LEN)))
+		strcpy(module_name, "IC:NT35521+YUSHUN; Glass:TFT; Resolution:720*1280");
+	else if (!strncmp(LcdPanelName, LEAD_HX8394D_720_1280_5P0_P826N33_NAME, strnlen(LEAD_HX8394D_720_1280_5P0_P826N33_NAME, PANEL_NAME_MAX_LEN)))
+		strcpy(module_name, "IC:HX8394D+LEAD; Glass:TFT; Resolution:720*1280");
+	else
+		strcpy(module_name, "0");
+  
+	len = sprintf(page, "%s\n", module_name);
+	return len;
+}
+
+static void  init_lcd_proc(void)
+{
+	printk("ljs:init_lcd_proc\n");
+	d_entry = create_proc_entry("driver/lcd_id",
+				    0, NULL);
+    if (d_entry) {
+        d_entry->read_proc = msm_lcd_read_proc;
+        d_entry->data = NULL;
+     }
+}
+/* lijiangshuo add for LCD factory mode 20140430 end */
+
 static int mdss_fb_probe(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd = NULL;
@@ -469,6 +506,12 @@ static int mdss_fb_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, mfd);
 
+	if (!init_lcd_proc_done) // lijiangshuo add for LCD factory mode 20140505
+	{
+		init_lcd_proc(); //  lijiangshuo add for LCD factory mode 20140430
+		init_lcd_proc_done = 1;
+	}
+    
 	rc = mdss_fb_register(mfd);
 	if (rc)
 		return rc;

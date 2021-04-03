@@ -665,6 +665,13 @@ config TI_DRV2667
 	  To compile this driver as a module, choose M here: the
 	  module will be called ti_drv2667.
 
+#[ECID:000000] ZTEBSP wangqiaoming 20131230 for hardware board id,start
+config HW_BOARD_ID
+	bool "Module which is to show zte hardware board id"
+	---help---
+	zte board id module
+#[ECID:000000] ZTEBSP wangqiaoming 20131230 for hardware board id,end
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"

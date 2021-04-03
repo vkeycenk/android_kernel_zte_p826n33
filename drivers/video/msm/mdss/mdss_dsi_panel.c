@@ -26,6 +26,8 @@
 
 #define DT_CMD_HDR 6
 
+char LcdPanelName[50] = {0}; // lijiangshuo add for LCD factory mode 20140430
+
 DEFINE_LED_TRIGGER(bl_led_trigger);
 
 void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
@@ -129,6 +131,64 @@ static void mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
 	mdss_dsi_cmdlist_put(ctrl, &cmdreq);
 }
 
+/* lijiangshuo add for LCD ESD test 20140522 start */
+int mdss_dsi_panel_status_check(struct mdss_dsi_ctrl_pdata *ctrl)
+{
+    	char rf[3] = {0x10, 0x10, 0x10};
+	int ret = 0;
+	int data, hs_mode = 0;
+	
+	/* if now is high speed mode, change it to low power mode */
+	data = MIPI_INP(ctrl->ctrl_base  + 0x38);
+	if((data & BIT(26)) == 0)
+	{
+		hs_mode = 1;
+		data |= BIT(26);
+		MIPI_OUTP(ctrl->ctrl_base  + 0x38, data);
+	}
+	
+	if (!strncmp(LcdPanelName, LEAD_HX8394D_720_1280_5P0_P826N33_NAME, strnlen(LEAD_HX8394D_720_1280_5P0_P826N33_NAME, PANEL_NAME_MAX_LEN)))
+	{
+		mdss_dsi_panel_cmd_read(ctrl, 0x09, 0x00, NULL, rf, 3); // rlen=3 for LREAD RESPONSE lijiangshuo 20140619
+		printk("ljs hx8394d 0x09[0]=%x  0x09[1]=%x\n", rf[0], rf[1]);
+		if((rf[0] !=0x80) || (rf[1] !=0x73))
+		{
+			ret = -1;
+			goto end;
+		}
+		
+		mdss_dsi_panel_cmd_read(ctrl, 0x0a, 0x00, NULL, rf, 3);// rlen=3 for LREAD RESPONSE lijiangshuo 20140619
+		printk("ljs hx8394d 0x0a=%x\n", rf[0]);
+		if(rf[0] !=0x1c)
+		{
+			ret = -1;
+			goto end;
+		}
+	}
+	else if (!strncmp(LcdPanelName, YUSHUN_NT35521_720_1280_5P0_P826N33_NAME, strnlen(YUSHUN_NT35521_720_1280_5P0_P826N33_NAME, PANEL_NAME_MAX_LEN)))
+	{
+	    mdss_dsi_panel_cmd_read(ctrl, 0x0a, 0x00, NULL, rf, 1);
+		printk("ljs nt35521 0x0a=%x\n", rf[0]);
+		if(rf[0] !=0x9c)
+		{
+			ret = -1;
+			goto end;
+		}
+	}
+
+end:
+	/* if needed, reset it back to high speed mode */
+	if(hs_mode)
+	{
+		data = MIPI_INP(ctrl->ctrl_base  + 0x38);
+		data &= ~(BIT(26));
+		MIPI_OUTP(ctrl->ctrl_base  + 0x38, data);
+	}
+	
+	return ret;
+}
+/* lijiangshuo add for LCD ESD test 20140522 end */
+
 static char led_pwm1[2] = {0x51, 0x0};	/* DTYPE_DCS_WRITE1 */
 static struct dsi_cmd_desc backlight_cmd = {
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 1, sizeof(led_pwm1)},
@@ -138,6 +198,7 @@ static struct dsi_cmd_desc backlight_cmd = {
 static void mdss_dsi_panel_bklt_dcs(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 {
 	struct dcs_cmd_req cmdreq;
+	printk("ljs %s bl_level = %d\n", __func__, level);
 
 	pr_debug("%s: level=%d\n", __func__, level);
 
@@ -196,6 +257,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
 	struct mdss_panel_info *pinfo = NULL;
 	int i, rc = 0;
+	printk("ljs %s enable=%d\n", __func__, enable);
 
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
@@ -397,6 +459,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	if (ctrl->on_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->on_cmds);
 
+	printk("ljs %s panel=%s on_cmds send\n", __func__, LcdPanelName);
 	pr_debug("%s:-\n", __func__);
 	return 0;
 }
@@ -421,6 +484,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	if (ctrl->off_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->off_cmds);
 
+	printk("ljs %s panel=%s off_cmds send\n", __func__, LcdPanelName);
 	pr_debug("%s:-\n", __func__);
 	return 0;
 }
@@ -1012,6 +1076,8 @@ int mdss_dsi_panel_init(struct device_node *node,
 	else
 		pr_info("%s: Panel Name = %s\n", __func__, panel_name);
 
+	strcpy(LcdPanelName, panel_name); //lijiangshuo add for compatible 20140416
+
 	rc = mdss_panel_parse_dt(node, ctrl_pdata);
 	if (rc) {
 		pr_err("%s:%d panel dt parse failed\n", __func__, __LINE__);
@@ -1049,6 +1115,7 @@ int mdss_dsi_panel_init(struct device_node *node,
 	ctrl_pdata->on = mdss_dsi_panel_on;
 	ctrl_pdata->off = mdss_dsi_panel_off;
 	ctrl_pdata->panel_data.set_backlight = mdss_dsi_panel_bl_ctrl;
+	ctrl_pdata->check_lcd_status = mdss_dsi_panel_status_check; // lijiangshuo add for LCD ESD test 20140522
 
 	return 0;
 }

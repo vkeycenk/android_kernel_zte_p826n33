@@ -17,7 +17,7 @@
 	qcom,rpull-up-kohm = <100>;
 	qcom,vref-batt-therm = <1800000>;
 
-	/include/ "batterydata-qrd-4v2-2000mah.dtsi"
+	/include/ "batterydata-qrd-4v35-2300mah.dtsi" /*ZTE_MODIFY zhangbo change*/
 };
 
 &pm8226_bms {
@@ -61,7 +61,7 @@
 			focaltech,ignore-id-check;
 		};
 	};
-
+/*  zhangzhao for virtual key for N33
 	gen-vkeys {
 		compatible = "qcom,gen-vkeys";
 		label = "ft5x06_ts";
@@ -72,7 +72,10 @@
 		qcom,key-codes = <139 172 158>;
 		qcom,y-offset = <0>;
 	};
+*/
 
+/*ZTE_MODIFY zhangbo change for buttorn-backlight, start*/
+/*
 	gpio-leds {
 		compatible = "gpio-leds";
 		keypad-backlight {
@@ -81,8 +84,11 @@
 			linux,default-trigger = "none";
 		};
 	};
+*/
+/*zhangbo change for buttorn-backlight, end*/
 };
-
+/*ZTE_MODIFY zhangbo change for buttorn-backlight, start*/
+/*
 &spmi_bus {
 	qcom,pm8226@0 {
 		qcom,leds@a100 {
@@ -90,7 +96,8 @@
 			};
 		};
 };
-
+*/
+/*zhangbo change for buttorn-backlight, end*/
 &mdss_dsi0 {
 	qcom,dsi-pref-prim-pan = <&dsi_ssd2080m_720_vid>;
 };

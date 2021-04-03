@@ -19,3 +19,5 @@ obj-$(CONFIG_OV5648) += ov5648.o
 obj-$(CONFIG_MT9M114) += mt9m114.o
 obj-$(CONFIG_SP1628) += sp1628.o
 obj-$(CONFIG_GC0339) += gc0339.o
+obj-$(CONFIG_SP0A28) += sp0a28.o #ZTEBSP yuxin add for P826N33,2014.04.09
+obj-$(CONFIG_SP0A20) += sp0a20.o #ZTEBSP yuxin add for P826N33,2014.05.09

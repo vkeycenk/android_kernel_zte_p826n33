@@ -23,6 +23,12 @@ struct panel_id {
 	u16 type;
 };
 
+/* lijiangshuo add for LCD factory mode 20140430 start */
+#define PANEL_NAME_MAX_LEN 50
+#define YUSHUN_NT35521_720_1280_5P0_P826N33_NAME "nt35521 yushun 720p video mode dsi panel"
+#define LEAD_HX8394D_720_1280_5P0_P826N33_NAME "hx8394d lead 720p video mode dsi panel"
+/* lijiangshuo add for LCD factory mode 20140430 end */
+
 #define DEFAULT_FRAME_RATE	60
 #define MDSS_DSI_RST_SEQ_LEN	10
 

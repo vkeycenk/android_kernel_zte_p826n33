@@ -70,3 +70,6 @@ obj-$(CONFIG_QSEECOM) += qseecom.o
 obj-$(CONFIG_QFP_FUSE) += qfp_fuse.o
 obj-$(CONFIG_TI_DRV2667) += ti_drv2667.o
 obj-$(CONFIG_QPNP_MISC) += qpnp-misc.o
+#[ECID:000000] ZTEBSP wangqiaoming 20131230 for hardware board id,start
+obj-$(CONFIG_HW_BOARD_ID)	  += zte_hw_board.o
+#[ECID:000000] ZTEBSP wangqiaoming 20131230 for hardware board id,end

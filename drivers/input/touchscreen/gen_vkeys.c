@@ -153,7 +153,7 @@ static int __devinit vkeys_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "pdata is invalid\n");
 		return -EINVAL;
 	}
-
+	#if 0
 	border = (pdata->panel_maxx - pdata->disp_maxx) * 2;
 	width = ((pdata->disp_maxx - (border * (pdata->num_keys - 1)))
 			/ pdata->num_keys);
@@ -162,15 +162,24 @@ static int __devinit vkeys_probe(struct platform_device *pdev)
 	height = height * HEIGHT_SCALE_NUM / HEIGHT_SCALE_DENOM;
 
 	x2 -= border * BORDER_ADJUST_NUM / BORDER_ADJUST_DENOM;
+	#endif
+	//border :(distance between two keys)/2
+	border = (pdata->panel_maxx/ (pdata->num_keys*4)) ;
+	//and distance=width of key
+	width = ((pdata->disp_maxx - (border * pdata->num_keys*2 ))
+			/ pdata->num_keys);
+	height = (pdata->panel_maxy - pdata->disp_maxy);
+	center_y = pdata->disp_maxy + (height / 2) + pdata->y_offset;
+	x2 -= border;
 
 	for (i = 0; i < pdata->num_keys; i++) {
-		x1 = x2 + border;
-		x2 = x2 + border + width;
+		x1 = x2 + border*2;
+		x2 = x2 + border*2 + width;
 		center_x = x1 + (x2 - x1) / 2;
 		c += snprintf(vkey_buf + c, MAX_BUF_SIZE - c,
 				"%s:%d:%d:%d:%d:%d\n",
 				VKEY_VER_CODE, pdata->keycodes[i],
-				center_x, center_y, width, height);
+				center_x, center_y, width + 20, height);
 	}
 
 	vkey_buf[c] = '\0';

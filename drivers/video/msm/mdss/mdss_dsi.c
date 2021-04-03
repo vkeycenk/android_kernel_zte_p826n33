@@ -312,6 +312,7 @@ static int mdss_dsi_off(struct mdss_panel_data *pdata)
 		return 0;
 	}
 
+	printk("ljs %s\n", __func__);
 	pdata->panel_info.panel_power_on = 0;
 
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
@@ -370,6 +371,7 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 		return 0;
 	}
 
+	printk("ljs %s\n", __func__);
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
@@ -407,7 +409,7 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 		return ret;
 	}
 
-	pdata->panel_info.panel_power_on = 1;
+//	pdata->panel_info.panel_power_on = 1; // ljs modified for lp11_init 20140616
 	mdss_dsi_phy_sw_reset((ctrl_pdata->ctrl_base));
 	mdss_dsi_phy_init(pdata);
 	mdss_dsi_bus_clk_stop(ctrl_pdata);
@@ -499,6 +501,8 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 	}
 	if (pdata->panel_info.mipi.init_delay)
 		usleep(pdata->panel_info.mipi.init_delay);
+
+	pdata->panel_info.panel_power_on = 1; // ljs modified for lp11_init 20140616
 
 	if (mipi->force_clk_lane_hs) {
 		u32 tmp;
@@ -1325,6 +1329,7 @@ int dsi_panel_device_register(struct device_node *pan_node,
 		pr_err("%s:%d, reset gpio not specified\n",
 						__func__, __LINE__);
 
+	ctrl_pdata->mode_gpio = -1; // lijiangshuo add 20140522
 	if (pinfo->mode_gpio_state != MODE_GPIO_NOT_VALID) {
 
 		ctrl_pdata->mode_gpio = of_get_named_gpio(

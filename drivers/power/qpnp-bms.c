@@ -3655,6 +3655,8 @@ static int set_battery_data(struct qpnp_bms_chip *chip)
 		batt_data = &QRD_4v35_2000mAh_data;
 	} else if (chip->batt_type == BATT_QRD_4V2_1300MAH) {
 		batt_data = &qrd_4v2_1300mah_data;
+	} else if (chip->batt_type == BATT_ZTE_4V35_2300MAH) {
+		batt_data = &zte_4v35_2300mah_data;
 	} else {
 		battery_id = read_battery_id(chip);
 		if (battery_id < 0) {
@@ -4157,8 +4159,11 @@ static int refresh_die_temp_monitor(struct qpnp_bms_chip *chip)
 						+ chip->temperature_margin;
 	chip->die_temp_monitor_params.low_temp = result.physical
 						- chip->temperature_margin;
+	/*
 	chip->die_temp_monitor_params.state_request =
 						ADC_TM_HIGH_LOW_THR_ENABLE;
+	*/
+	chip->die_temp_monitor_params.state_request = ADC_TM_HIGH_LOW_THR_DISABLE;
 	return qpnp_adc_tm_channel_measure(chip->adc_tm_dev,
 					&chip->die_temp_monitor_params);
 }

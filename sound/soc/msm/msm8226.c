@@ -96,10 +96,11 @@ static struct wcd9xxx_mbhc_config mbhc_cfg = {
 	.micbias_enable_flags = 1 << MBHC_MICBIAS_ENABLE_THRESHOLD_HEADSET,
 	.insert_detect = true,
 	.swap_gnd_mic = NULL,
-	.cs_enable_flags = (1 << MBHC_CS_ENABLE_POLLING |
+	.cs_enable_flags = 0,//wangxiumei mod to 0
+			    /*(1 << MBHC_CS_ENABLE_POLLING |
 			    1 << MBHC_CS_ENABLE_INSERTION |
 			    1 << MBHC_CS_ENABLE_REMOVAL |
-			    1 << MBHC_CS_ENABLE_DET_ANC),
+			    1 << MBHC_CS_ENABLE_DET_ANC),*/
 	.do_recalibration = true,
 	.use_vddio_meas = true,
 	.enable_anc_mic_detect = false,
@@ -1074,7 +1075,7 @@ void *def_tapan_mbhc_cal(void)
 #undef S
 #define S(X, Y) ((WCD9XXX_MBHC_CAL_PLUG_TYPE_PTR(tapan_cal)->X) = (Y))
 	S(v_no_mic, 30);
-	S(v_hs_max, 2450);
+	S(v_hs_max, 2700);//S(v_hs_max, 2800);//wangxiumei mod 2450 to 2800
 #undef S
 #define S(X, Y) ((WCD9XXX_MBHC_CAL_BTN_DET_PTR(tapan_cal)->X) = (Y))
 	S(c[0], 62);
@@ -1092,6 +1093,8 @@ void *def_tapan_mbhc_cal(void)
 	btn_low = wcd9xxx_mbhc_cal_btn_det_mp(btn_cfg, MBHC_BTN_DET_V_BTN_LOW);
 	btn_high = wcd9xxx_mbhc_cal_btn_det_mp(btn_cfg,
 					       MBHC_BTN_DET_V_BTN_HIGH);
+    //wangxiumei mod
+    /*
 	btn_low[0] = -50;
 	btn_high[0] = 20;
 	btn_low[1] = 21;
@@ -1108,6 +1111,24 @@ void *def_tapan_mbhc_cal(void)
 	btn_high[6] = 269;
 	btn_low[7] = 270;
 	btn_high[7] = 500;
+*/
+	btn_low[0] = -75;//weiguohua modify it temp  20140623
+	btn_high[0] = 20;
+	btn_low[1] = 21;
+	btn_high[1] = 52;
+	btn_low[2] = 53;
+	btn_high[2] = 94;
+	btn_low[3] = 95;
+	btn_high[3] = 133;
+	btn_low[4] = 134;
+	btn_high[4] = 171;
+	btn_low[5] = 172;
+	btn_high[5] = 208;
+	btn_low[6] = 209;
+	btn_high[6] = 244;
+	btn_low[7] = 245;
+	btn_high[7] = 330;
+    //wangxiumei mod    
 	n_ready = wcd9xxx_mbhc_cal_btn_det_mp(btn_cfg, MBHC_BTN_DET_N_READY);
 	n_ready[0] = 80;
 	n_ready[1] = 12;

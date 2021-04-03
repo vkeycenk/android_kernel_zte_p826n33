@@ -327,7 +327,8 @@ FREE_SENSORDATA:
 	return rc;
 }
 
-static void msm_sensor_misc_regulator(
+//static //yuxin modify
+void msm_sensor_misc_regulator(
 	struct msm_sensor_ctrl_t *sctrl, uint32_t enable)
 {
 	int32_t rc = 0;
@@ -1214,7 +1215,9 @@ int32_t msm_sensor_platform_probe(struct platform_device *pdev, void *data)
 	msm_sd_register(&s_ctrl->msm_sd);
 	CDBG("%s:%d\n", __func__, __LINE__);
 
-	s_ctrl->func_tbl->sensor_power_down(s_ctrl);
+	if(strcmp("imx135", s_ctrl->sensordata->sensor_name)) {
+	     s_ctrl->func_tbl->sensor_power_down(s_ctrl);
+        }
 	CDBG("%s:%d\n", __func__, __LINE__);
 	return rc;
 }

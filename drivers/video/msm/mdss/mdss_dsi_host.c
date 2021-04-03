@@ -629,6 +629,7 @@ int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	int ret = 0;
 	unsigned long flag;
+	int tmp; // lijiangshuo add qcom patch for LCD ESD test 20140530
 
 	if (ctrl_pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
@@ -648,6 +649,11 @@ int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	INIT_COMPLETION(ctrl_pdata->bta_comp);
 	mdss_dsi_enable_irq(ctrl_pdata, DSI_BTA_TERM);
 	spin_unlock_irqrestore(&ctrl_pdata->mdp_lock, flag);
+/* lijiangshuo add qcom patch for LCD ESD test 20140530 start */
+	tmp = MIPI_INP(ctrl_pdata->ctrl_base + 0x110);
+	tmp |= DSI_INTR_BTA_DONE_MASK | DSI_INTR_CMD_DMA_DONE_MASK;
+	MIPI_OUTP(ctrl_pdata->ctrl_base + 0x110, tmp);
+/* lijiangshuo add qcom patch for LCD ESD test 20140530 end */
 	MIPI_OUTP(ctrl_pdata->ctrl_base + 0x098, 0x01); /* trigger  */
 	wmb();
 

@@ -86,8 +86,8 @@
 			"LDO_H", "MCLK",
 			"SPK_OUT", "MCLK",
 			"SPK_OUT", "EXT_VDD_SPKR",
-			"AMIC1", "MIC BIAS1 Internal1",
-			"MIC BIAS1 Internal1", "Handset Mic",
+			"AMIC1", "MIC BIAS1 External",/*jiaobaocun modified*/
+			"MIC BIAS1 External", "Handset Mic",/*jiaobaocun modified*/
 			"AMIC2", "MIC BIAS2 External",
 			"MIC BIAS2 External", "Headset Mic",
 			"AMIC4", "MIC BIAS2 External",
@@ -104,7 +104,7 @@
 			"MIC BIAS3 External", "Digital Mic4";
 
 		qcom,cdc-mclk-gpios = <&pm8226_gpios 1 0>;
-		qcom,cdc-vdd-spkr-gpios = <&pm8226_gpios 2 0>;
+		/*qcom,cdc-vdd-spkr-gpios = <&pm8226_gpios 2 0>;*//*jiaobaocun modified*/
 		qcom,headset-jack-type-NC;
 		qcom,mbhc-audio-jack-type = "6-pole-jack";
 	};
@@ -123,7 +123,7 @@
 			"MIC BIAS1 External", "Handset Mic";
 
 		qcom,cdc-mclk-gpios = <&pm8226_gpios 1 0>;
-		qcom,cdc-vdd-spkr-gpios = <&pm8226_gpios 2 0>;
+		/*qcom,cdc-vdd-spkr-gpios = <&pm8226_gpios 2 0>;*//*jiaobaocun modified*/
 		qcom,headset-jack-type-NC;
 	};
 };

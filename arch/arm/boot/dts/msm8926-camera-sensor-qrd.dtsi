@@ -23,7 +23,8 @@
 };
 
 &cci {
-
+/*ZTEBSP yuxin del qualcomm org code for imx135 init 2014.04.08 ++*/
+/*
 	actuator0: qcom,actuator@6e {
 		cell-index = <5>;
 		reg = <0x18>;
@@ -229,14 +230,15 @@
 		qcom,cci-master = <0>;
 		status = "ok";
 	};
-
+*/
+/*ZTEBSP yuxin del qualcomm org code for imx135 init 2014.04.08 --*/
 	qcom,camera@0 {
 		cell-index = <0>;
 		compatible = "qcom,camera";
 		reg = <0x00>;
 		qcom,csiphy-sd-index = <0>;
 		qcom,csid-sd-index = <0>;
-		qcom,actuator-src = <&actuator0>;
+		//qcom,actuator-src = <&actuator0>; //yuxin del for compile 2014.04.08
 		qcom,led-flash-src = <&led_flash0>;
 		qcom,mount-angle = <90>;
 		cam_vdig-supply = <&pm8226_l5>;

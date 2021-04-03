@@ -229,7 +229,9 @@ struct cpr_regulator {
 #define CPR_DEBUG_MASK_IRQ	BIT(0)
 #define CPR_DEBUG_MASK_API	BIT(1)
 
-static int cpr_debug_enable = CPR_DEBUG_MASK_IRQ;
+//static int cpr_debug_enable = CPR_DEBUG_MASK_IRQ;
+static int cpr_debug_enable = 0;
+
 static int cpr_enable;
 static struct cpr_regulator *the_cpr;
 
@@ -405,6 +407,30 @@ static bool cpr_ctl_is_busy(struct cpr_regulator *cpr_vreg)
 	reg_val = cpr_read(cpr_vreg, REG_RBCPR_RESULT_0);
 	return reg_val & RBCPR_RESULT0_BUSY_MASK;
 }
+
+#if 0
+static void cpr_regs_save(struct cpr_regulator *cpr_vreg)
+{
+	int i, offset;
+
+	for (i = 0; i < CPR_NUM_SAVE_REGS; i++) {
+		offset = cpr_vreg->save_regs[i];
+		cpr_vreg->save_reg_val[i] = cpr_read(cpr_vreg, offset);
+	}
+}
+
+static void cpr_regs_restore(struct cpr_regulator *cpr_vreg)
+{
+	int i, offset;
+	u32 val;
+
+	for (i = 0; i < CPR_NUM_SAVE_REGS; i++) {
+		offset = cpr_vreg->save_regs[i];
+		val = cpr_vreg->save_reg_val[i];
+		cpr_write(cpr_vreg, offset, val);
+	}
+}
+#endif
 
 static void cpr_corner_save(struct cpr_regulator *cpr_vreg, int corner)
 {

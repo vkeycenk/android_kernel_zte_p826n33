@@ -3148,6 +3148,9 @@ static struct clk_lookup msm_clocks_8226[] = {
 	CLK_LOOKUP("mem_clk",    gcc_boot_rom_ahb_clk.c, "fc880000.qcom,mss"),
 	/* NFC */
 	CLK_LOOKUP("ref_clk",            cxo_d1_a_pin.c, "2-000e"),
+    /* wangjianping 20140108 added for bb_clk2 for nfc , start */
+	CLK_LOOKUP("bb_clk2",            cxo_d1_pin.c, "2-0028"),
+    /* wangjianping 20140108 added for bb_clk2 for nfc , end */
 	/* PIL-PRONTO */
 	CLK_LOOKUP("xo", cxo_pil_pronto_clk.c, "fb21b000.qcom,pronto"),
 
@@ -3404,18 +3407,26 @@ static struct clk_lookup msm_clocks_8226[] = {
 	CLK_LOOKUP("core_clk", oxili_gfx3d_clk.c, "fd8c4034.qcom,gdsc"),
 
 	/* MM sensor clocks */
+
+	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "20.qcom,camera"),//imx135
+	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "7a.qcom,camera"),//sp0a28
+	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "42.qcom,camera"),//sp0a20
+
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "6f.qcom,camera"),
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "90.qcom,camera"),
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "6d.qcom,camera"),
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "6a.qcom,camera"),
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "6c.qcom,camera"),
-	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "20.qcom,camera"),
+
+	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "20.qcom,camera"),//imx135
+	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "7a.qcom,camera"),//sp0a28
+	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "42.qcom,camera"),//sp0a20
+
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "6f.qcom,camera"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "90.qcom,camera"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "6d.qcom,camera"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "6a.qcom,camera"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "6c.qcom,camera"),
-	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "20.qcom,camera"),
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "0.qcom,camera"),
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "1.qcom,camera"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "0.qcom,camera"),

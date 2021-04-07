@@ -11,12 +11,21 @@
  *
  */
 #include "msm_sensor.h"
+#include "msm_cci.h"
+#include <linux/proc_fs.h>
+#include <eeprom/msm_eeprom.h>   //yuxin add for OTP 2014.06.20
 #define IMX135_SENSOR_NAME "imx135"
 DEFINE_MSM_MUTEX(imx135_mut);
-
+#undef CDBG
+#ifdef CONFIG_MSMB_CAMERA_DEBUG
+#define CDBG(fmt, args...) pr_err(fmt, ##args)
+#else
+#define CDBG(fmt, args...) do { } while (0)
+#endif
 static struct msm_sensor_ctrl_t imx135_s_ctrl;
 
 static struct msm_sensor_power_setting imx135_power_setting[] = {
+#if 0  
 	{
 		.seq_type = SENSOR_VREG,
 		.seq_val = CAM_VDIG,
@@ -77,6 +86,56 @@ static struct msm_sensor_power_setting imx135_power_setting[] = {
 		.config_val = 0,
 		.delay = 0,
 	},
+#else
+      {
+		.seq_type = SENSOR_GPIO,
+		.seq_val = SENSOR_GPIO_RESET,
+		.config_val = GPIO_OUT_LOW,
+		.delay = 1,
+	},
+	{
+		.seq_type = SENSOR_VREG,
+		.seq_val = CAM_VDIG,
+		.config_val = 0,
+		.delay = 0,
+	},
+	{
+		.seq_type = SENSOR_VREG,
+		.seq_val = CAM_VIO,
+		.config_val = 0,
+		.delay = 0,
+	},
+	{
+		.seq_type = SENSOR_GPIO,
+		.seq_val = SENSOR_GPIO_VANA,
+		.config_val = GPIO_OUT_HIGH,
+		.delay = 5,
+	},
+	{
+		.seq_type = SENSOR_GPIO,
+		.seq_val = SENSOR_GPIO_VAF,
+		.config_val = GPIO_OUT_HIGH,
+		.delay = 5,
+	},
+	{
+		.seq_type = SENSOR_CLK,
+		.seq_val = SENSOR_CAM_MCLK,
+		.config_val = 24000000,
+		.delay = 1,
+	},
+	{
+		.seq_type = SENSOR_GPIO,
+		.seq_val = SENSOR_GPIO_RESET,
+		.config_val = GPIO_OUT_HIGH,
+		.delay = 30,
+	},
+	{
+		.seq_type = SENSOR_I2C_MUX,
+		.seq_val = 0,
+		.config_val = 0,
+		.delay = 0,
+	},
+#endif
 };
 
 static struct v4l2_subdev_info imx135_subdev_info[] = {
@@ -92,6 +151,27 @@ static const struct i2c_device_id imx135_i2c_id[] = {
 	{IMX135_SENSOR_NAME, (kernel_ulong_t)&imx135_s_ctrl},
 	{ }
 };
+
+static ssize_t imx135_camera_id_read_proc(char *page,char **start,off_t off,
+{
+	int ret;
+	unsigned char *camera_status = "BACK Camera ID:Imx135 13M";
+	ret = strlen(camera_status);
+	sprintf(page,"%s\n",camera_status);
+	return (ret + 1);
+}
+
+static void imx135_camera_proc_file(void)
+{
+	struct proc_dir_entry *proc_file  = create_proc_entry("driver/camera_id_back",0644,NULL);
+	if(proc_file)
+	{
+		proc_file->read_proc = imx135_camera_id_read_proc;		     
+	}else
+	{
+		pr_err(KERN_INFO "camera_proc_file error!\r\n");
+	}
+ }
 
 static int32_t msm_imx135_i2c_probe(struct i2c_client *client,
 	const struct i2c_device_id *id)

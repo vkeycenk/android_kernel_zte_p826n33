@@ -90,7 +90,9 @@ module_param(lpm_disconnect_thresh , uint, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(lpm_disconnect_thresh,
 	"Delay before entering LPM on USB disconnect");
 
-static bool floated_charger_enable;
+//[0000]maxiaoping 20131204 for floated charger charging enable,start.
+static bool floated_charger_enable = 1;
+//[0000]maxiaoping 20131204 for floated charger charging enable,end.
 module_param(floated_charger_enable , bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(floated_charger_enable,
 	"Whether to enable floated charger");
@@ -1364,8 +1366,13 @@ static int msm_otg_notify_power_supply(struct msm_otg *motg, unsigned mA)
 			goto psy_error;
 	} else if (motg->cur_power > 0 && (mA == 0 || mA == 2)) {
 		/* Disable charging */
-		if (power_supply_set_online(psy, false))
+		//[0000]maxiaoping 20140208 for usb otg,start.
+		if(mA == 0)
+		{
+			if (power_supply_set_online(psy, false))
 			goto psy_error;
+		}
+		//[0000]maxiaoping 20140208 for usb otg,end.
 		/* Set max current limit */
 		if (power_supply_set_current_limit(psy, 0))
 			goto psy_error;
@@ -1409,6 +1416,11 @@ static void msm_otg_notify_charger(struct msm_otg *motg, unsigned mA)
 			mA > IDEV_ACA_CHG_LIMIT)
 		mA = IDEV_ACA_CHG_LIMIT;
 
+	else if((motg->chg_type == USB_FLOATED_CHARGER) && (mA > 500)) {
+		mA = 500;
+		dev_info(motg->phy.dev, "charger type %d Avail curr changed to %u\n", motg->chg_type, mA);
+	}	
+
 	if (msm_otg_notify_chg_type(motg))
 		dev_err(motg->phy.dev,
 			"Failed notifying %d charger type to PMIC\n",
@@ -1424,7 +1436,7 @@ static void msm_otg_notify_charger(struct msm_otg *motg, unsigned mA)
 	if (motg->cur_power == mA)
 		return;
 
-	dev_info(motg->phy.dev, "Avail curr from USB = %u\n", mA);
+	dev_info(motg->phy.dev, "charger type %d Avail curr from USB = %u\n", motg->chg_type, mA);
 
 	/*
 	 *  Use Power Supply API if supported, otherwise fallback

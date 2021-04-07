@@ -1081,4 +1081,28 @@ config RMNET_SDIO_SMD_DATA_CHANNEL
        help
 	  Data SMD channel for transferring network data
 
+#ztebsp zuojianfang add for mac cdrom  20130502
+config USB_MAC
+    bool  "USB_MAC"
+    help
+         CDROM IN MAC OS
+	 support to the android gadget. 
+#ztebsp zhangjing add for mac cdrom  20130502
+
+#/**  ZTE_MODIFY  zhangjing add for one udisk 2014-5-8  start*/
+config USB_ONE_MS
+    bool  "USB_ONE_MS"
+    help
+         ONLY ONE UDISK
+	 support to the android gadget.
+#/**  ZTE_MODIFY  zhangjing add for one udisk 2014-5-8 end */
+
+#ztebsp zhangjing add for at port,++,20130313
+config USB_AT
+       boolean "ADD AT USB PORT"
+       help
+         ADD AT ports from USB gadget
+	 support to the android gadget. 
+	 it ADD the AT port TO USB functions. 
+#ztebsp zuojianfang add for at port,--,20130313
 endif # USB_GADGET

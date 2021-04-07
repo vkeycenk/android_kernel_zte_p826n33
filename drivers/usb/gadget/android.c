@@ -23,6 +23,9 @@
 #include <linux/kernel.h>
 #include <linux/utsname.h>
 #include <linux/platform_device.h>
+#if defined(CONFIG_USB_MAC)
+#include <linux/types.h>
+#endif
 #include <linux/pm_qos.h>
 #include <linux/of.h>
 
@@ -34,7 +37,11 @@
 #include <mach/diag_dload.h>
 
 #include "gadget_chips.h"
-
+#if defined(CONFIG_USB_MAC)
+#include "u_serial.h"
+#include <linux/miscdevice.h>
+#include <linux/wakelock.h>
+#endif
 /*
  * Kbuild is not very cooperative with respect to linking separately
  * compiled library objects into one module.  So for now we won't use
@@ -1238,6 +1245,9 @@ static struct android_usb_function qdss_function = {
 	.cleanup	= qdss_function_cleanup,
 	.bind_config	= qdss_function_bind_config,
 };
+#if defined(CONFIG_USB_AT)
+static char max_serial_transports[32]={'s','m','d',',','t','t','y',',','s','m','d'};//"smd,tty,smd";      
+#endif 
 
 /* SERIAL */
 static char serial_transports[32];	/*enabled FSERIAL ports - "tty[,sdio]"*/
@@ -1295,7 +1305,11 @@ static int serial_function_bind_config(struct android_usb_function *f,
 		goto bind_config;
 
 	serial_initialized = 1;
+#if defined(CONFIG_USB_AT)
+	strlcpy(buf, max_serial_transports, sizeof(buf)); 
+#else
 	strlcpy(buf, serial_transports, sizeof(buf));
+#endif
 	b = strim(buf);
 
 	strlcpy(xport_name_buf, serial_xport_names, sizeof(xport_name_buf));
@@ -1322,6 +1336,20 @@ static int serial_function_bind_config(struct android_usb_function *f,
 	}
 
 bind_config:
+#if defined(CONFIG_USB_AT)
+
+	strlcpy(buf, serial_transports, sizeof(buf));
+	ports = 0;
+        b = strim(buf);
+
+        while (b) {
+                name = strsep(&b, ",");
+                if (name) {
+                        ports++;
+
+                }
+        }
+#endif
 	for (i = 0; i < ports; i++) {
 		err = gser_bind_config(c, i);
 		if (err) {
@@ -1778,45 +1806,54 @@ static int mass_storage_function_init(struct android_usb_function *f,
 	struct mass_storage_function_config *config;
 	struct fsg_common *common;
 	int err;
-	int i, n;
-	char name[FSG_MAX_LUNS][MAX_LUN_NAME];
-	u8 uicc_nluns = dev->pdata ? dev->pdata->uicc_nluns : 0;
+	int i;
+	const char *name[3];
 
 	config = kzalloc(sizeof(struct mass_storage_function_config),
 								GFP_KERNEL);
 	if (!config)
 		return -ENOMEM;
 
+#if defined(CONFIG_USB_ONE_MS)
 	config->fsg.nluns = 1;
-	snprintf(name[0], MAX_LUN_NAME, "lun");
+	config->fsg.luns[0].cdrom = 0;
+	config->fsg.luns[0].nofua = 1;
 	config->fsg.luns[0].removable = 1;
+	name[0] = "lun";
 
 	if (dev->pdata && dev->pdata->cdrom) {
-		config->fsg.luns[config->fsg.nluns].cdrom = 1;
-		config->fsg.luns[config->fsg.nluns].ro = 1;
-		config->fsg.luns[config->fsg.nluns].removable = 0;
-		snprintf(name[config->fsg.nluns], MAX_LUN_NAME, "lun0");
-		config->fsg.nluns++;
+	//	config->fsg.luns[config->fsg.nluns].cdrom = 1;
+	//	config->fsg.luns[config->fsg.nluns].ro = 1;
+	//	config->fsg.luns[config->fsg.nluns].removable = 0;
+	//	snprintf(name[config->fsg.nluns], MAX_LUN_NAME, "lun0");
+	//	config->fsg.nluns++;
 	}
 	if (dev->pdata && dev->pdata->internal_ums) {
-		config->fsg.luns[config->fsg.nluns].cdrom = 0;
-		config->fsg.luns[config->fsg.nluns].ro = 0;
-		config->fsg.luns[config->fsg.nluns].removable = 1;
-		snprintf(name[config->fsg.nluns], MAX_LUN_NAME, "lun1");
-		config->fsg.nluns++;
+	//	config->fsg.luns[config->fsg.nluns].cdrom = 0;
+	//	config->fsg.luns[config->fsg.nluns].ro = 0;
+	//	config->fsg.luns[config->fsg.nluns].removable = 1;
+	//	snprintf(name[config->fsg.nluns], MAX_LUN_NAME, "lun1");
+	//	config->fsg.nluns++;
 	}
 
-	if (uicc_nluns > FSG_MAX_LUNS - config->fsg.nluns) {
-		uicc_nluns = FSG_MAX_LUNS - config->fsg.nluns;
-		pr_debug("limiting uicc luns to %d\n", uicc_nluns);
+#else
+  config->fsg.nluns = 2;
+	name[0] = "lun0";
+    name[1] = "lun1";
+	if (dev->pdata->cdrom) {
+		/*config->fsg.nluns = 2;
+		config->fsg.luns[1].cdrom = 1;
+		config->fsg.luns[1].ro = 1;
+		config->fsg.luns[1].removable = 1;
+		name[1] = "lun0";*/
 	}
+//	 config->fsg.luns[0].removable = 1;
+	 config->fsg.luns[0].removable = 1;
+	 config->fsg.luns[0].nofua = 1;
+	 config->fsg.luns[1].removable = 1; 
+	 config->fsg.luns[1].nofua = 1;
 
-	for (i = 0; i < uicc_nluns; i++) {
-		n = config->fsg.nluns;
-		snprintf(name[n], MAX_LUN_NAME, "uicc%d", i);
-		config->fsg.luns[n].removable = 1;
-		config->fsg.nluns++;
-	}
+#endif
 
 	common = fsg_common_init(NULL, cdev, &config->fsg);
 	if (IS_ERR(common)) {
@@ -1834,6 +1871,7 @@ static int mass_storage_function_init(struct android_usb_function *f,
 
 	config->common = common;
 	f->config = config;
+	mass_storage_config = config;
 	return 0;
 error:
 	for (; i > 0 ; i--)
@@ -1854,6 +1892,20 @@ static int mass_storage_function_bind_config(struct android_usb_function *f,
 						struct usb_configuration *c)
 {
 	struct mass_storage_function_config *config = f->config;
+
+#if defined(CONFIG_USB_ONE_MS)
+	config->common->nluns=1;
+	config->common->luns[0].cdrom = 0;
+	config->common->luns[0].removable=1;
+
+#else
+	config->common->nluns=2;
+	config->common->luns[0].cdrom = 0;
+	config->common->luns[1].cdrom = 0;
+	config->common->luns[0].removable=1;
+	config->common->luns[1].removable=1;
+#endif
+
 	return fsg_bind_config(c->cdev, c, config->common);
 }
 
@@ -1891,6 +1943,58 @@ static struct android_usb_function mass_storage_function = {
 	.init		= mass_storage_function_init,
 	.cleanup	= mass_storage_function_cleanup,
 	.bind_config	= mass_storage_function_bind_config,
+	.attributes	= mass_storage_function_attributes,
+};
+static int cdrom_function_init(struct android_usb_function *f,
+					struct usb_composite_dev *cdev)
+{
+	int err;
+	struct mass_storage_function_config *config = mass_storage_config;
+	config->fsg.nluns = 1;
+	config->fsg.luns[0].removable = 1;
+	/* initialization is handled by mass_storage_function_init */
+	if (!config)
+		return -1;
+	err = sysfs_create_link(&f->dev->kobj,
+				&config->common->luns[0].dev.kobj,
+				"lun");
+	if (err) {
+		return err;
+	}
+	f->config = config;
+	return 0;
+}
+
+static void cdrom_function_cleanup(struct android_usb_function *f)
+{
+	/* nothing to do - cleanup is handled by mass_storage_function_cleanup */
+}
+
+static int cdrom_function_bind_config(struct android_usb_function *f,
+						struct usb_configuration *c)
+{
+	struct mass_storage_function_config *config = f->config;
+       config->common->nluns=1;
+	config->common->luns[0].removable=0;
+	config->common->luns[0].cdrom = 1;
+	config->common->private_data = f->dev;
+	return fsg_bind_config(c->cdev, c, config->common);
+}
+
+void cdrom_function_unbind_config(struct android_usb_function *f, 
+						struct usb_configuration *c)
+{
+	struct mass_storage_function_config *config = f->config;
+	config->common->luns[0].cdrom = 0;
+	config->common->private_data = NULL;
+}
+
+static struct android_usb_function cdrom_function = {
+	.name		= "cdrom",
+	.init		= cdrom_function_init,
+	.cleanup	= cdrom_function_cleanup,
+	.bind_config	= cdrom_function_bind_config,
+	.unbind_config	= cdrom_function_unbind_config,
 	.attributes	= mass_storage_function_attributes,
 };
 
@@ -2117,6 +2221,7 @@ static struct android_usb_function *supported_functions[] = {
 	&ecm_function,
 	&ncm_function,
 	&mass_storage_function,
+	&cdrom_function,
 	&accessory_function,
 #ifdef CONFIG_SND_PCM
 	&audio_source_function,

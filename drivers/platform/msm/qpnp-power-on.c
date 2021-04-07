@@ -32,6 +32,11 @@
 #define PMIC8941_V2_REV4	0x02
 #define PON_REV2_VALUE		0x00
 
+/*maxiaoping 20140113 modify for power_off_charging pwrkey report,start.*/ 
+#include <linux/wakelock.h>
+extern int boot_is_poweroff_charger(void);
+/*maxiaoping 20140113 modify for power_off_charging pwrkey report,end.*/ 
+
 /* Common PNP defines */
 #define QPNP_PON_REVISION2(base)		(base + 0x01)
 
@@ -142,6 +147,7 @@ struct qpnp_pon {
 	int num_pon_config;
 	u16 base;
 	struct delayed_work bark_work;
+	struct wake_lock pwr_key_wake_lock;/*maxiaoping 20140113 modify for power_off_charging pwrkey report.*/ 
 };
 
 static struct qpnp_pon *sys_reset_dev;
@@ -386,13 +392,16 @@ qpnp_get_cfg(struct qpnp_pon *pon, u32 pon_type)
 	return NULL;
 }
 
+/*maxiaoping 20140113 modify for power_off_charging pwrkey report,start.*/ 
 static int
 qpnp_pon_input_dispatch(struct qpnp_pon *pon, u32 pon_type)
 {
 	int rc;
 	struct qpnp_pon_config *cfg = NULL;
 	u8 pon_rt_sts = 0, pon_rt_bit = 0;
+	static int wake_lock_enable = 0;
 
+	//printk("PM_DEBUG_MXP: Enter qpnp_pon_input_dispatch.\n");
 	cfg = qpnp_get_cfg(pon, pon_type);
 	if (!cfg)
 		return -EINVAL;
@@ -409,9 +418,21 @@ qpnp_pon_input_dispatch(struct qpnp_pon *pon, u32 pon_type)
 		return rc;
 	}
 
+	printk("PM_DEBUG_MXP: pon_rt_sts = %d.\n",pon_rt_sts);
+	//printk("PM_DEBUG_MXP: cfg->pon_type = %d.\n",cfg->pon_type);
 	switch (cfg->pon_type) {
 	case PON_KPDPWR:
-		pon_rt_bit = QPNP_PON_KPDPWR_N_SET;
+		pon_rt_bit = QPNP_PON_KPDPWR_N_SET;//add pwrkey detect code here.
+		if(QPNP_PON_KPDPWR_N_SET == (pon_rt_sts & QPNP_PON_KPDPWR_N_SET))
+		{
+			printk("PM_DEBUG_MXP: PowerKey pressed.\n");
+			wake_lock_enable = 1;
+		}
+		else
+		{
+			printk("PM_DEBUG_MXP: PowerKey release.\n");
+			wake_lock_enable = 0;
+		}
 		break;
 	case PON_RESIN:
 		pon_rt_bit = QPNP_PON_RESIN_N_SET;
@@ -430,8 +451,13 @@ qpnp_pon_input_dispatch(struct qpnp_pon *pon, u32 pon_type)
 					(pon_rt_sts & pon_rt_bit));
 	input_sync(pon->pon_input);
 
+	if((1 == wake_lock_enable)&&(boot_is_poweroff_charger()))
+	wake_lock_timeout(&pon->pwr_key_wake_lock, 2 * HZ);
+
+	//printk("PM_DEBUG_MXP: Enter qpnp_pon_input_dispatch.\n");
 	return 0;
 }
+/*maxiaoping 20140113 modify for power_off_charging pwrkey report,end.*/ 
 
 static irqreturn_t qpnp_kpdpwr_irq(int irq, void *_pon)
 {
@@ -1102,6 +1128,53 @@ free_input_dev:
 	return rc;
 }
 
+static u8 pon_registers[8] = { 0 };
+
+int print_pon_registers(char *buffer, int len)
+{
+	int i;
+	int n = 0;
+	struct qpnp_pon *pon = sys_reset_dev;
+
+	if (buffer == NULL || len <= 64)
+		return 0;
+	if (pon == NULL)
+		return 0;
+
+	for (i = 0; i < ARRAY_SIZE(pon_registers); i ++) {
+		n += sprintf(buffer + n, "0x%04x = 0x%02x\n",
+			QPNP_PON_REASON1(pon->base) + i, pon_registers[i]);
+	}
+	return n;
+}
+EXPORT_SYMBOL(print_pon_registers);
+
+static int __devinit dump_pon_registers(void)
+{
+	int rc;
+	int i;
+	struct qpnp_pon *pon = sys_reset_dev;
+	u8 reg[8] = { 0 };
+	int reg_len  = ARRAY_SIZE(reg);
+
+	rc = spmi_ext_register_readl(pon->spmi->ctrl, pon->spmi->sid,
+			QPNP_PON_REASON1(pon->base), reg, sizeof(reg));
+	if (rc) {
+		dev_err(&pon->spmi->dev, "Unable to dump PON_RESASON1 reg\n");
+		return rc;
+	}
+
+        pr_info("pon registers:\n");
+	for (i = 0; i < reg_len; i++) {
+		pr_info("0x%04x = 0x%02x\n",
+			QPNP_PON_REASON1(pon->base) + i, reg[i]);
+	}
+
+	memcpy(pon_registers, reg, sizeof(reg));
+
+	return rc;
+}
+
 static int __devinit qpnp_pon_probe(struct spmi_device *spmi)
 {
 	struct qpnp_pon *pon;
@@ -1194,6 +1267,8 @@ static int __devinit qpnp_pon_probe(struct spmi_device *spmi)
 				pon->spmi->sid,
 				qpnp_poff_reason[index]);
 
+	rc = dump_pon_registers();
+
 	rc = of_property_read_u32(pon->spmi->dev.of_node,
 				"qcom,pon-dbc-delay", &delay);
 	if (rc) {
@@ -1270,6 +1345,10 @@ static int __devinit qpnp_pon_probe(struct spmi_device *spmi)
 	dev_set_drvdata(&spmi->dev, pon);
 
 	INIT_DELAYED_WORK(&pon->bark_work, bark_work_func);
+
+	/*maxiaoping 20140113 modify for power_off_charging pwrkey report,start.*/ 
+	wake_lock_init(&pon->pwr_key_wake_lock, WAKE_LOCK_SUSPEND, "zte_pwr_key_press_event");
+	/*maxiaoping 20140113 modify for power_off_charging pwrkey report,end.*/ 
 
 	/* register the PON configurations */
 	rc = qpnp_pon_config_init(pon);

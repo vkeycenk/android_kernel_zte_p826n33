@@ -17,3 +17,5 @@
 /include/ "dsi-panel-nt35590-720p-cmd.dtsi"
 /include/ "dsi-panel-ssd2080m-720p-video.dtsi"
 /include/ "dsi-panel-jdi-1080p-video.dtsi"
+/include/ "dsi-panel-nt35521-yushun-720p-video.dtsi" // lijiangshuo add for P826N33 LCD 20140430
+/include/ "dsi-panel-hx8394d-lead-720p-video.dtsi" // lijiangshuo add for P826N33 LCD 20140430

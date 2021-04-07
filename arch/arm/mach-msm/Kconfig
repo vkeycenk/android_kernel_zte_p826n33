@@ -3045,6 +3045,14 @@ config KRAIT_REGULATOR
 	 this option to support such configurations.
 endif
 
+config ZTE_P826N33_DTB
+	depends on ARCH_MSM8226
+	default n
+	bool "ZTE P826N33 Device DTBs"
+	help
+	 Only include ZTE P826N33 specific DTBs to limit the number that
+	 get built during kernel compilation.
+
 config KERNEL_TEXT_MPU_PROT
         bool "Enable xpu protection of kernel r/o sections"
         help

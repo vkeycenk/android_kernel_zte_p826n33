@@ -100,6 +100,9 @@ endif
 
 # MSM8226
    zreladdr-$(CONFIG_ARCH_MSM8226)	:= 0x00008000
+   ifeq ($(CONFIG_ZTE_P826N33_DTB),y)
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-qrd-p826n33.dtb
+   else
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-sim.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-fluid.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-v1-cdp.dtb
